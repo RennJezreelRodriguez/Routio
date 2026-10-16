@@ -448,8 +448,11 @@ function GoalModal({ goalToEdit, categories, onSave, onClose }) {
 
       setPreparedGoalData(constructedGoal);
 
+      // Save immediately to state so it populates the dashboard right away!
+      onSave(constructedGoal, false);
+
       if (isEditing) {
-        onSave(constructedGoal, true);
+        onClose();
       } else {
         setShowReveal(true);
       }
