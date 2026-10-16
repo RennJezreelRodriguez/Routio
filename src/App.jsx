@@ -617,7 +617,7 @@ function GoalModal({ goalToEdit, categories, onSave, onClose }) {
                             borderRadius: "9px",
                             color: "var(--ink)",
                             padding: "9px 12px",
-                            fontSize: "13.5px",
+                            fontSize: "16px",
                             outline: "none"
                           }}
                         />
@@ -646,7 +646,7 @@ function GoalModal({ goalToEdit, categories, onSave, onClose }) {
                             borderRadius: "9px",
                             color: "var(--ink)",
                             padding: "9px 12px",
-                            fontSize: "13.5px",
+                            fontSize: "16px",
                             outline: "none"
                           }}
                         />
@@ -717,7 +717,7 @@ function GoalModal({ goalToEdit, categories, onSave, onClose }) {
                         borderRadius: "9px",
                         color: "var(--ink)",
                         padding: "9px 12px",
-                        fontSize: "13.5px",
+                        fontSize: "16px",
                         outline: "none"
                       }}
                     />
@@ -954,7 +954,7 @@ function SteppedActionModal({ initialAction, onSave, onDelete, onClose }) {
                     borderRadius: "9px",
                     color: "var(--ink)",
                     padding: "10px 12px",
-                    fontSize: "13.5px",
+                    fontSize: "16px",
                     outline: "none"
                   }}
                 />
@@ -1143,14 +1143,14 @@ function CategoriesModal({ categories, goals, onUpdateCategories, onClose }) {
             value={newIcon}
             onChange={(e) => setNewIcon(e.target.value)}
             placeholder="Icon"
-            style={{ width: "50px", textAlign: "center", background: "var(--card)", border: "1px solid var(--line)", borderRadius: "8px", color: "var(--ink)" }}
+            style={{ width: "50px", textAlign: "center", background: "var(--card)", border: "1px solid var(--line)", borderRadius: "8px", color: "var(--ink)", fontSize: "16px" }}
           />
           <input
             type="text"
             value={newLabel}
             onChange={(e) => setNewLabel(e.target.value)}
             placeholder="Category Name"
-            style={{ flex: 1, background: "var(--card)", border: "1px solid var(--line)", borderRadius: "8px", padding: "8px 12px", color: "var(--ink)", outline: "none" }}
+            style={{ flex: 1, background: "var(--card)", border: "1px solid var(--line)", borderRadius: "8px", padding: "8px 12px", color: "var(--ink)", outline: "none", fontSize: "16px" }}
           />
           <button onClick={handleAdd} className="btn primary smooth-transition" style={{ padding: "8px 14px" }}>Add</button>
         </div>
@@ -1643,7 +1643,7 @@ function GoalWorkspace({ goal, categories, onBack, onUpdateGoal, onDeleteGoal, o
                     style={{
                       width: "100%",
                       fontFamily: "JetBrains Mono, monospace",
-                      fontSize: "12px",
+                      fontSize: "16px",
                       padding: "8px",
                       background: "var(--card)",
                       border: "1px solid var(--line)",
@@ -2203,13 +2203,13 @@ function RoutioApp() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="smooth-transition"
-              style={{ flex: 1, minWidth: "180px", background: "var(--card)", border: "1px solid var(--line)", borderRadius: "10px", padding: "10px 14px", fontSize: "13.5px", color: "var(--ink)", outline: "none" }}
+              style={{ flex: 1, minWidth: "180px", background: "var(--card)", border: "1px solid var(--line)", borderRadius: "10px", padding: "10px 14px", fontSize: "16px", color: "var(--ink)", outline: "none" }}
             />
             <select
               value={selectedCategoryFilter}
               onChange={(e) => setSelectedCategoryFilter(e.target.value)}
               className="smooth-transition"
-              style={{ background: "var(--card)", border: "1px solid var(--line)", borderRadius: "10px", padding: "10px 14px", fontSize: "13.5px", color: "var(--ink)", outline: "none", cursor: "pointer" }}
+              style={{ background: "var(--card)", border: "1px solid var(--line)", borderRadius: "10px", padding: "10px 14px", fontSize: "16px", color: "var(--ink)", outline: "none", cursor: "pointer" }}
             >
               <option value="all">All Categories</option>
               {categories.map(c => (
