@@ -2139,6 +2139,21 @@ function RoutioApp() {
               >
                 <span>⚙</span> Manage Categories
               </button>
+              <a
+                href="https://forms.gle/M2XjFdnUdNpCmkhLA"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ textDecoration: "none" }}
+              >
+                <button
+                  className="smooth-transition"
+                  style={{ background: "none", border: "none", textAlign: "left", padding: "10px 12px", borderRadius: "8px", fontSize: "13px", color: "var(--ink)", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", width: "100%" }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = "var(--paper)"}
+                  onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                >
+                  <span>💬</span> Send Feedback
+                </button>
+              </a>
               <button
                 onClick={exportBackup}
                 className="smooth-transition"
@@ -2196,26 +2211,57 @@ function RoutioApp() {
             </div>
           )}
 
-          <div style={{ display: "flex", gap: "10px", marginBottom: "20px", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "20px" }}>
             <input
               type="text"
               placeholder="Search goals..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="smooth-transition"
-              style={{ flex: 1, minWidth: "180px", background: "var(--card)", border: "1px solid var(--line)", borderRadius: "10px", padding: "10px 14px", fontSize: "16px", color: "var(--ink)", outline: "none" }}
+              style={{ width: "100%", background: "var(--card)", border: "1px solid var(--line)", borderRadius: "10px", padding: "10px 14px", fontSize: "16px", color: "var(--ink)", outline: "none" }}
             />
-            <select
-              value={selectedCategoryFilter}
-              onChange={(e) => setSelectedCategoryFilter(e.target.value)}
-              className="smooth-transition"
-              style={{ background: "var(--card)", border: "1px solid var(--line)", borderRadius: "10px", padding: "10px 14px", fontSize: "16px", color: "var(--ink)", outline: "none", cursor: "pointer" }}
-            >
-              <option value="all">All Categories</option>
-              {categories.map(c => (
-                <option key={c.key || c.label} value={c.label}>{c.icon} {c.label}</option>
-              ))}
-            </select>
+            <div style={{ display: "flex", gap: "6px", overflowX: "auto", paddingBottom: "4px", scrollbarWidth: "none" }}>
+              <button
+                type="button"
+                onClick={() => setSelectedCategoryFilter("all")}
+                className="smooth-transition"
+                style={{
+                  padding: "6px 12px",
+                  borderRadius: "20px",
+                  fontSize: "12px",
+                  whiteSpace: "nowrap",
+                  border: `1px solid ${selectedCategoryFilter === "all" ? "var(--ink)" : "var(--line)"}`,
+                  background: selectedCategoryFilter === "all" ? "var(--paper)" : "transparent",
+                  color: selectedCategoryFilter === "all" ? "var(--ink)" : "var(--graphite)",
+                  cursor: "pointer"
+                }}
+              >
+                All
+              </button>
+              {categories.map(c => {
+                const isSelected = selectedCategoryFilter === c.label;
+                return (
+                  <button
+                    key={c.key || c.label}
+                    type="button"
+                    onClick={() => setSelectedCategoryFilter(c.label)}
+                    className="smooth-transition"
+                    style={{
+                      padding: "6px 12px",
+                      borderRadius: "20px",
+                      fontSize: "12px",
+                      whiteSpace: "nowrap",
+                      border: `1px solid ${isSelected ? "var(--ink)" : "var(--line)"}`,
+                      background: isSelected ? "var(--paper)" : "transparent",
+                      color: isSelected ? "var(--ink)" : "var(--graphite)",
+                      cursor: "pointer"
+                    }}
+                  >
+                    {c.icon} {c.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div className="grid">
@@ -2252,32 +2298,22 @@ function RoutioApp() {
                     WebkitUserSelect: "none",
                     display: "flex",
                     flexDirection: "column",
-                    justifyContent: "space-between"
+                    justifyContent: "space-between",
+                    padding: "16px 18px",
+                    gap: "12px"
                   }}
                 >
-                  <div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <div className="card-category">{g.category} {g.completed && "• Completed"}</div>
-                      {isConsistencyGoal && (
-                        <span style={{ 
-                          fontSize: "10.5px", 
-                          padding: "2px 6px", 
-                          borderRadius: "6px", 
-                          background: "var(--paper)", 
-                          color: "var(--graphite)",
-                          fontWeight: 500 
-                        }}>
-                          Active
-                        </span>
-                      )}
+                      <span className="card-category">{g.category} {g.completed && "• Completed"}</span>
                     </div>
-                    <h3 className="card-title" style={{ marginTop: "6px" }}>{g.title}</h3>
+                    <h3 className="card-title" style={{ fontSize: "17px" }}>{g.title}</h3>
                   </div>
 
-                  <div style={{ marginTop: "auto", paddingTop: "12px" }}>
+                  <div style={{ paddingTop: "4px", borderTop: "1px solid var(--line)" }}>
                     {isConsistencyGoal ? (
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <span className={`streak-badge ${cardStats.streak > 0 ? "lit" : "unlit"}`} style={{ fontSize: "12px" }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "8px" }}>
+                        <span className={`streak-badge ${cardStats.streak > 0 ? "lit" : "unlit"}`} style={{ fontSize: "11.5px" }}>
                           🔥 {cardStats.streak} day streak
                         </span>
                         <span style={{ fontSize: "11px", color: "var(--graphite)" }}>
@@ -2285,7 +2321,9 @@ function RoutioApp() {
                         </span>
                       </div>
                     ) : (
-                      <ValueProgressBar goal={g} />
+                      <div style={{ paddingTop: "8px" }}>
+                        <ValueProgressBar goal={g} />
+                      </div>
                     )}
                   </div>
                 </div>
