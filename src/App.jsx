@@ -368,7 +368,6 @@ function GoalModal({ goalToEdit, categories, onSave, onClose }) {
   const [milestones, setMilestones] = React.useState(
     goalToEdit?.actions?.map(a => a.name) || ["", ""]
   );
-  const [freq, setFreq] = React.useState('daily');
   
   const [hasDeadline, setHasDeadline] = React.useState(!!goalToEdit?.targetDate);
   const [targetDate, setTargetDate] = React.useState(goalToEdit?.targetDate || "");
@@ -381,10 +380,15 @@ function GoalModal({ goalToEdit, categories, onSave, onClose }) {
   function handleNext() {
     if (step === 1 && (!title.trim() || !category)) return;
     if (step === 2 && !goalType) return;
+    
     if (step === 3) {
       if (goalType === 'measurable' && targetVal === "") return;
       if (goalType === 'milestone' && milestones.filter(m => m.trim()).length === 0) return;
-      if (goalType === 'habit' && !freq) return;
+    }
+
+    if (step === 2 && goalType === 'habit') {
+      setStep(4);
+      return;
     }
 
     if (step < 4) {
@@ -398,10 +402,6 @@ function GoalModal({ goalToEdit, categories, onSave, onClose }) {
       if (!isEditing || actions.length === 0) {
         actions = [];
         if (goalType === 'habit') {
-          let days = [0,1,2,3,4,5,6];
-          if (freq === '3x') days = [1, 3, 5];
-          if (freq === '5x') days = [1, 2, 3, 4, 5];
-          if (freq === 'weekly') days = [1];
           actions.push({
             id: uid(),
             name: title.trim(),
@@ -409,8 +409,8 @@ function GoalModal({ goalToEdit, categories, onSave, onClose }) {
             target: 1,
             step: 1,
             unit: '',
-            scheduleType: freq === 'daily' ? 'daily' : 'specific',
-            days
+            scheduleType: 'daily',
+            days: [0, 1, 2, 3, 4, 5, 6]
           });
         } else if (goalType === 'milestone') {
           milestones.filter(m => m.trim()).forEach(m => {
@@ -422,7 +422,7 @@ function GoalModal({ goalToEdit, categories, onSave, onClose }) {
               step: 1,
               unit: '',
               scheduleType: 'daily',
-              days: [0,1,2,3,4,5,6]
+              days: [0, 1, 2, 3, 4, 5, 6]
             });
           });
         }
@@ -447,8 +447,6 @@ function GoalModal({ goalToEdit, categories, onSave, onClose }) {
       };
 
       setPreparedGoalData(constructedGoal);
-
-      // Save immediately to state so it populates the dashboard right away!
       onSave(constructedGoal, false);
 
       if (isEditing) {
@@ -565,10 +563,10 @@ function GoalModal({ goalToEdit, categories, onSave, onClose }) {
               </div>
             )}
 
-            {step === 3 && (
+            {step === 3 && goalType !== 'habit' && (
               <div>
                 <div style={{ fontSize: "13px", color: "var(--graphite)", marginBottom: "14px" }}>
-                  {goalType === 'measurable' ? 'Set your numbers' : goalType === 'milestone' ? 'Lay out your checkpoints' : 'Set your rhythm'}
+                  {goalType === 'measurable' ? 'Set your numbers' : 'Lay out your checkpoints'}
                 </div>
 
                 {goalType === 'measurable' && (
@@ -681,35 +679,6 @@ function GoalModal({ goalToEdit, categories, onSave, onClose }) {
                     </button>
                   </div>
                 )}
-
-                {goalType === 'habit' && (
-                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                    {[
-                      { v: 'daily', label: 'Daily' },
-                      { v: '3x', label: '3x / week' },
-                      { v: '5x', label: '5x / week' },
-                      { v: 'weekly', label: 'Weekly' }
-                    ].map(f => (
-                      <button
-                        key={f.v}
-                        type="button"
-                        onClick={() => setFreq(f.v)}
-                        className="smooth-transition"
-                        style={{
-                          padding: "9px 14px",
-                          borderRadius: "20px",
-                          border: `1px solid ${freq === f.v ? "var(--ink)" : "var(--line)"}`,
-                          color: freq === f.v ? "var(--ink)" : "var(--graphite)",
-                          background: freq === f.v ? "var(--paper)" : "transparent",
-                          fontSize: "13px",
-                          cursor: "pointer"
-                        }}
-                      >
-                        {f.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
             )}
 
@@ -723,7 +692,7 @@ function GoalModal({ goalToEdit, categories, onSave, onClose }) {
                   <span>{selectedCatObj ? selectedCatObj.label : "—"}</span>
                   {goalType === 'measurable' && <span><b>{startVal || 0}</b> &rarr; <b>{targetVal || '?'}</b> {selectedUnit}</span>}
                   {goalType === 'milestone' && <span><b>{milestones.filter(m => m.trim()).length}</b> checkpoints</span>}
-                  {goalType === 'habit' && <span><b>{freq === 'daily' ? 'Daily' : freq === '3x' ? '3x / week' : freq === '5x' ? '5x / week' : 'Weekly'}</b></span>}
+                  {goalType === 'habit' && <span><b>Consistency Habit</b></span>}
                 </div>
 
                 <div style={{ borderTop: "1px solid var(--line)", paddingTop: "14px", textAlign: "left" }}>
@@ -760,7 +729,13 @@ function GoalModal({ goalToEdit, categories, onSave, onClose }) {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "30px" }}>
               <button
                 type="button"
-                onClick={() => setStep(step - 1)}
+                onClick={() => {
+                  if (step === 4 && goalType === 'habit') {
+                    setStep(2);
+                  } else {
+                    setStep(step - 1);
+                  }
+                }}
                 style={{ background: "none", border: "none", color: "var(--graphite)", fontSize: "13.5px", cursor: "pointer", visibility: step === 1 ? "hidden" : "visible" }}
               >
                 Back
@@ -2246,6 +2221,9 @@ function RoutioApp() {
           <div className="grid">
             {activeGoals.map(g => {
               const isDragging = draggedGoalId === g.id;
+              const cardStats = calculateGoalStats(g);
+              const isConsistencyGoal = g.goalType === 'habit';
+
               return (
                 <div 
                   key={g.id}
@@ -2271,13 +2249,44 @@ function RoutioApp() {
                     cursor: isEditingLayout ? "grab" : "pointer",
                     touchAction: "none",
                     userSelect: "none",
-                    WebkitUserSelect: "none"
+                    WebkitUserSelect: "none",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "space-between"
                   }}
                 >
-                  <div className="card-category">{g.category} {g.completed && "• Completed"}</div>
-                  <h3 className="card-title">{g.title}</h3>
-                  <div style={{ marginTop: "auto" }}>
-                    <ValueProgressBar goal={g} />
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div className="card-category">{g.category} {g.completed && "• Completed"}</div>
+                      {isConsistencyGoal && (
+                        <span style={{ 
+                          fontSize: "10.5px", 
+                          padding: "2px 6px", 
+                          borderRadius: "6px", 
+                          background: "var(--paper)", 
+                          color: "var(--graphite)",
+                          fontWeight: 500 
+                        }}>
+                          Active
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="card-title" style={{ marginTop: "6px" }}>{g.title}</h3>
+                  </div>
+
+                  <div style={{ marginTop: "auto", paddingTop: "12px" }}>
+                    {isConsistencyGoal ? (
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <span className={`streak-badge ${cardStats.streak > 0 ? "lit" : "unlit"}`} style={{ fontSize: "12px" }}>
+                          🔥 {cardStats.streak} day streak
+                        </span>
+                        <span style={{ fontSize: "11px", color: "var(--graphite)" }}>
+                          {g.actions?.length || 0} routine{(g.actions?.length || 0) === 1 ? "" : "s"}
+                        </span>
+                      </div>
+                    ) : (
+                      <ValueProgressBar goal={g} />
+                    )}
                   </div>
                 </div>
               );
