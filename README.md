@@ -22,13 +22,13 @@ Students and working people juggling multiple personal goals (health, finances, 
 
 ## MVP roadmap
 
-| Increment | Scope | Weeks |
-|---|---|---|
-| 1 | Goal creation (measurable + milestone), dashboard with progress bars, category tagging | 1–2 |
-| 2 | Routines layer with streaks; search and category filter | 3–4 |
-| 3 | Completion celebrations, export/backup, reminders, PWA install polish | 5–6 |
+| Increment | Scope                                                                                  | Weeks |
+| --------- | -------------------------------------------------------------------------------------- | ----- |
+| 1         | Goal creation (measurable + milestone), dashboard with progress bars, category tagging | 1–2   |
+| 2         | Routines layer with streaks; search and category filter                                | 3–4   |
+| 3         | Completion celebrations, export/backup, reminders, PWA install polish                  | 5–6   |
 
-**Status:** Increments 1 and 2 are implemented, along with JSON export/import backup and PWA install support. Completion celebrations and reminders are not built yet.
+**Status:** Increments 1 and 2 are implemented, along with completion celebrations, JSON export/import backup, and PWA install support. Notifications/reminders are not built yet.
 
 **Success metric:** percentage of users who log at least one progress update on a goal 30 days after creating it.
 

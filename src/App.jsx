@@ -291,7 +291,7 @@ function CompletionModal({ goalTitle, onClose }) {
   }, []);
 
   return (
-    <BottomSheet isOpen={true} onClose={onClose} title="Milestone Achieved">
+    <BottomSheet isOpen={true} onClose={onClose} title="Goal Complete">
       <div style={{ textAlign: "center", padding: "10px 0 20px" }}>
         <h3 style={{ fontFamily: "Fraunces, Georgia, serif", fontSize: "20px", marginBottom: "8px" }}>
           Incredible work on "{goalTitle}"!
@@ -1659,11 +1659,11 @@ function GoalWorkspace({ goal, categories, onBack, onUpdateGoal, onDeleteGoal, o
         })()}
       </div>
 
-      {goal.targetValue !== undefined && goal.targetValue !== null && goal.targetValue !== "" && !Number.isNaN(Number(goal.targetValue)) && (
+           {goal.targetValue !== undefined && goal.targetValue !== null && goal.targetValue !== "" && !Number.isNaN(Number(goal.targetValue)) && (
         <div className="action-section">
           <div className="section-title">
-            <span>Milestones</span>
-            <SymbolButton symbol="+" label="Update Milestone" onClick={() => setValueLogModalOpen(true)} />
+            <span>Progress Updates</span>
+            <SymbolButton symbol="+" label="Log Progress" onClick={() => setValueLogModalOpen(true)} />
           </div>
           <ValueHistoryList goal={goal} onDeleteEntry={deleteValueLogEntry} />
         </div>
