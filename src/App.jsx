@@ -1392,53 +1392,95 @@ function GoalWorkspace({ goal, categories, onBack, onUpdateGoal, onDeleteGoal, o
         </div>
       </div>
 
-      <div className="action-section">
+            <div className="action-section">
         <div className="section-title">
           <span>Habits & Routines</span>
           <SymbolButton symbol="+" label="Add Routine" onClick={() => { setEditingAction(null); setActionModalOpen(true); }} />
         </div>
 
-        {(goal.actions || []).length === 0 ? (
-          <div style={{ fontSize: 13, color: "var(--graphite)", textAlign: "center", padding: "20px 0" }}>
-            No routines configured yet. Add routines to help you reach this goal.
-          </div>
-        ) : (
-          <div className="action-list">
-            {(goal.actions || []).map((a) => {
-              const isScheduled = isActionScheduledForDay(a, dayIndex);
-              const state = getActionState(goal, selectedDateKey, a.id);
+        {(() => {
+          const allActions = goal.actions || [];
+          const scheduledActions = allActions.filter((a) => isActionScheduledForDay(a, dayIndex));
+          const unscheduledActions = allActions.filter((a) => !isActionScheduledForDay(a, dayIndex));
+          const dayLabel = selectedDateKey === todayKey ? "today" : `on ${formatPrettyDate(selectedDateKey)}`;
 
-              return (
-                <div key={a.id} className={`action-item smooth-transition ${!isScheduled ? "unscheduled" : ""}`} style={{ opacity: isScheduled ? 1 : 0.5 }}>
-                  <div className="action-left" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                    {a.type === "counter" ? (
-                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                        <button className="btn ghost smooth-transition" style={{ padding: "4px 10px" }} onClick={() => incrementCounter(a, -1)}>-</button>
-                        <span style={{ fontSize: 13, fontWeight: 600, minWidth: "60px", textAlign: "center" }}>{state.count || 0} / {a.target} {a.unit}</span>
-                        <button className="btn ghost smooth-transition" style={{ padding: "4px 10px" }} onClick={() => incrementCounter(a, 1)}>+</button>
-                      </div>
-                    ) : (
-                      <input
-                        type="checkbox"
-                        checked={!!state.completed}
-                        onChange={() => toggleActionCheck(a.id)}
-                        style={{ width: 18, height: 18, cursor: "pointer", accentColor: "var(--ink)" }}
-                      />
-                    )}
-                    <div>
-                      <span className="action-label" style={{ textDecoration: state.completed ? "line-through" : "none", fontWeight: 500 }}>{a.name}</span>
-                      <span className="action-schedule-tag">{formatScheduleLabel(a)}</span>
-                    </div>
-                  </div>
-                  <div className="action-right">
-                    <SymbolButton symbol="✎" label="Edit Routine" onClick={() => { setEditingAction(a); setActionModalOpen(true); }} />
-                    <SymbolButton symbol="×" label="Delete Routine" onClick={() => deleteAction(a.id)} />
-                  </div>
+          if (allActions.length === 0) {
+            return (
+              <div style={{ fontSize: 13, color: "var(--graphite)", textAlign: "center", padding: "20px 0" }}>
+                No routines configured yet. Add routines to help you reach this goal.
+              </div>
+            );
+          }
+
+          return (
+            <>
+              {scheduledActions.length === 0 ? (
+                <div style={{ fontSize: 13, color: "var(--graphite)", textAlign: "center", padding: "20px 0" }}>
+                  No routines scheduled {dayLabel}.
                 </div>
-              );
-            })}
-          </div>
-        )}
+              ) : (
+                <div className="action-list">
+                  {scheduledActions.map((a) => {
+                    const state = getActionState(goal, selectedDateKey, a.id);
+
+                    return (
+                      <div key={a.id} className="action-item smooth-transition">
+                        <div className="action-left" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                          {a.type === "counter" ? (
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                              <button className="btn ghost smooth-transition" style={{ padding: "4px 10px" }} onClick={() => incrementCounter(a, -1)}>-</button>
+                              <span style={{ fontSize: 13, fontWeight: 600, minWidth: "60px", textAlign: "center" }}>{state.count || 0} / {a.target} {a.unit}</span>
+                              <button className="btn ghost smooth-transition" style={{ padding: "4px 10px" }} onClick={() => incrementCounter(a, 1)}>+</button>
+                            </div>
+                          ) : (
+                            <input
+                              type="checkbox"
+                              checked={!!state.completed}
+                              onChange={() => toggleActionCheck(a.id)}
+                              style={{ width: 18, height: 18, cursor: "pointer", accentColor: "var(--ink)" }}
+                            />
+                          )}
+                          <div>
+                            <span className="action-label" style={{ textDecoration: state.completed ? "line-through" : "none", fontWeight: 500 }}>{a.name}</span>
+                            <span className="action-schedule-tag">{formatScheduleLabel(a)}</span>
+                          </div>
+                        </div>
+                        <div className="action-right">
+                          <SymbolButton symbol="✎" label="Edit Routine" onClick={() => { setEditingAction(a); setActionModalOpen(true); }} />
+                          <SymbolButton symbol="×" label="Delete Routine" onClick={() => deleteAction(a.id)} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {unscheduledActions.length > 0 && (
+                <details style={{ marginTop: 14 }}>
+                  <summary style={{ fontSize: 12.5, color: "var(--graphite)", cursor: "pointer", userSelect: "none" }}>
+                    Not scheduled {dayLabel} ({unscheduledActions.length})
+                  </summary>
+                  <div className="action-list" style={{ marginTop: 10 }}>
+                    {unscheduledActions.map((a) => (
+                      <div key={a.id} className="action-item smooth-transition" style={{ opacity: 0.6 }}>
+                        <div className="action-left" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                          <div>
+                            <span className="action-label" style={{ fontWeight: 500 }}>{a.name}</span>
+                            <span className="action-schedule-tag">{formatScheduleLabel(a)}</span>
+                          </div>
+                        </div>
+                        <div className="action-right">
+                          <SymbolButton symbol="✎" label="Edit Routine" onClick={() => { setEditingAction(a); setActionModalOpen(true); }} />
+                          <SymbolButton symbol="×" label="Delete Routine" onClick={() => deleteAction(a.id)} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              )}
+            </>
+          );
+        })()}
       </div>
 
       <div className="action-section smooth-transition" style={{ background: "var(--card)", padding: "20px", borderRadius: "14px", border: "1px solid var(--line)" }}>
