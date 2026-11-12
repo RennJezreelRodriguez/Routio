@@ -524,19 +524,7 @@ function GoalModal({ goalToEdit, categories, onSave, onClose }) {
       const start = useNumbers ? (Number(startVal) || 0) : 0;
       const target = useNumbers ? Number(targetVal) : null;
 
-      let actions = goalToEdit?.actions || [];
-      if (goalType === 'habit' && (!isEditing || actions.length === 0)) {
-        actions = [{
-          id: uid(),
-          name: title.trim(),
-          type: 'checkbox',
-          target: 1,
-          step: 1,
-          unit: '',
-          scheduleType: 'daily',
-          days: [0, 1, 2, 3, 4, 5, 6]
-        }];
-      }
+      const actions = goalToEdit?.actions || [];
 
       let checkpoints = [];
       if (goalType === 'milestone') {
