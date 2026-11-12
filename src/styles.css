@@ -299,10 +299,7 @@ html, body {
   font-size: 10px;
   color: var(--graphite);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 45%;
-  flex-shrink: 1;
+  flex-shrink: 0;
 }
 
 .workspace-stats-bar {
