@@ -1513,10 +1513,12 @@ function GoalWorkspace({ goal, categories, onBack, onUpdateGoal, onDeleteGoal, o
             </span>
           </div>
         )}
-        <div className="stat-pill smooth-transition">
-          <span className="label">Streak</span>
-          <span className={`streak-badge ${stats.streak > 0 ? "lit" : "unlit"}`}>🔥 {stats.streak} days</span>
-        </div>
+        {(goal.actions || []).length > 0 && (
+          <div className="stat-pill smooth-transition">
+            <span className="label">Streak</span>
+            <span className={`streak-badge ${stats.streak > 0 ? "lit" : "unlit"}`}>🔥 {stats.streak} days</span>
+          </div>
+        )}
       </div>
 
       {goal.goalType === 'milestone' && (
