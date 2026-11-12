@@ -102,6 +102,28 @@ function formatNum(n) {
   return Math.round(n * 100) / 100;
 }
 
+function getCheckpointProgress(goal) {
+  const list = Array.isArray(goal.checkpoints) ? goal.checkpoints : [];
+  const done = list.filter((c) => c.done).length;
+  const total = list.length;
+  const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+  return { done, total, pct };
+}
+
+function normalizeGoal(g) {
+  if (g.goalType === 'milestone' && !Array.isArray(g.checkpoints)) {
+    const old = Array.isArray(g.actions) ? g.actions : [];
+    const checkpoints = old.map((a) => {
+      const everDone = Object.values(g.history || {}).some(
+        (day) => day && day[a.id] && day[a.id].completed
+      );
+      return { id: a.id, name: a.name, done: everDone };
+    });
+    return { ...g, checkpoints, actions: [] };
+  }
+  return g;
+}
+
 function getActionState(goal, dateKey, actionId) {
   return goal.history?.[dateKey]?.[actionId] || { completed: false, count: 0 };
 }
@@ -200,14 +222,27 @@ function SymbolButton({ symbol, label, onClick, hasBadge }) {
 }
 
 function ValueProgressBar({ goal }) {
+  const checkpoints = Array.isArray(goal.checkpoints) ? goal.checkpoints : [];
+
+  if (goal.goalType === 'milestone' && checkpoints.length > 0) {
+    const { done, total, pct } = getCheckpointProgress(goal);
+    return (
+      <div className="goal-progress-inline">
+        <div className="goal-progress-track">
+          <div className="goal-progress-fill" style={{ width: `${pct}%` }} />
+        </div>
+        <span className="goal-progress-label">
+          {done} / {total} checkpoints ({pct}%)
+        </span>
+      </div>
+    );
+  }
+
   if (goal.targetValue === undefined || goal.targetValue === null || goal.targetValue === "" || Number.isNaN(Number(goal.targetValue))) {
     return null;
   }
 
-  const { pct } = React.useMemo(
-    () => calculateValueProgress(goal),
-    [goal.currentValue, goal.startValue, goal.targetValue]
-  );
+  const { pct } = calculateValueProgress(goal);
 
   return (
     <div className="goal-progress-inline">
@@ -217,6 +252,97 @@ function ValueProgressBar({ goal }) {
       <span className="goal-progress-label">
         {formatNum(goal.currentValue)}{goal.unit} / {formatNum(goal.targetValue)}{goal.unit} ({pct}%)
       </span>
+    </div>
+  );
+}
+
+function CheckpointList({ goal, onUpdateGoal }) {
+  const [newName, setNewName] = React.useState("");
+  const checkpoints = Array.isArray(goal.checkpoints) ? goal.checkpoints : [];
+  const { done, total } = getCheckpointProgress(goal);
+
+  function toggleCheckpoint(id) {
+    const updated = checkpoints.map((c) => (c.id === id ? { ...c, done: !c.done } : c));
+    onUpdateGoal({ ...goal, checkpoints: updated });
+  }
+
+  function addCheckpoint() {
+    const name = newName.trim();
+    if (!name) return;
+    onUpdateGoal({ ...goal, checkpoints: [...checkpoints, { id: uid(), name, done: false }] });
+    setNewName("");
+  }
+
+  function deleteCheckpoint(id) {
+    if (!confirm("Delete this checkpoint?")) return;
+    onUpdateGoal({ ...goal, checkpoints: checkpoints.filter((c) => c.id !== id) });
+  }
+
+  return (
+    <div className="action-section">
+      <div className="section-title">
+        <span>Checkpoints</span>
+        <span style={{ fontSize: 12, color: "var(--graphite)" }}>{done} / {total} done</span>
+      </div>
+
+      {checkpoints.length === 0 ? (
+        <div style={{ fontSize: 13, color: "var(--graphite)", textAlign: "center", padding: "20px 0" }}>
+          No checkpoints yet. Add your first step below.
+        </div>
+      ) : (
+        <div className="action-list">
+          {checkpoints.map((c) => (
+            <div key={c.id} className="action-item smooth-transition">
+              <div className="action-left" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <input
+                  type="checkbox"
+                  checked={!!c.done}
+                  onChange={() => toggleCheckpoint(c.id)}
+                  style={{ width: 18, height: 18, cursor: "pointer", accentColor: "var(--ink)" }}
+                />
+                <span
+                  className="action-label"
+                  style={{ textDecoration: c.done ? "line-through" : "none", fontWeight: 500 }}
+                >
+                  {c.name}
+                </span>
+              </div>
+              <div className="action-right">
+                <SymbolButton symbol="×" label="Delete Checkpoint" onClick={() => deleteCheckpoint(c.id)} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div style={{ display: "flex", gap: "8px", marginTop: "14px" }}>
+        <input
+          type="text"
+          value={newName}
+          onChange={(e) => setNewName(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") addCheckpoint(); }}
+          placeholder="Add a checkpoint..."
+          style={{
+            flex: 1,
+            background: "var(--card)",
+            border: "1px solid var(--line)",
+            borderRadius: "9px",
+            color: "var(--ink)",
+            padding: "9px 12px",
+            fontSize: "13.5px",
+            outline: "none"
+          }}
+        />
+        <button type="button" className="btn primary smooth-transition" onClick={addCheckpoint} style={{ padding: "9px 14px" }}>
+          Add
+        </button>
+      </div>
+
+      {total > 0 && done === total && !goal.completed && (
+        <div style={{ fontSize: 12.5, color: "var(--graphite)", marginTop: "12px", textAlign: "center" }}>
+          All checkpoints done. Tap ✓ at the top to complete this goal.
+        </div>
+      )}
     </div>
   );
 }
@@ -366,7 +492,7 @@ function GoalModal({ goalToEdit, categories, onSave, onClose }) {
   const [targetVal, setTargetVal] = React.useState(goalToEdit?.targetValue ?? "");
   const [selectedUnit, setSelectedUnit] = React.useState(goalToEdit?.unit || "");
   const [milestones, setMilestones] = React.useState(
-    goalToEdit?.actions?.map(a => a.name) || ["", ""]
+    goalToEdit?.checkpoints?.map(c => c.name) || ["", ""]
   );
   
   const [hasDeadline, setHasDeadline] = React.useState(!!goalToEdit?.targetDate);
@@ -399,33 +525,29 @@ function GoalModal({ goalToEdit, categories, onSave, onClose }) {
       const target = useNumbers ? Number(targetVal) : null;
 
       let actions = goalToEdit?.actions || [];
-      if (!isEditing || actions.length === 0) {
-        actions = [];
-        if (goalType === 'habit') {
-          actions.push({
-            id: uid(),
-            name: title.trim(),
-            type: 'checkbox',
-            target: 1,
-            step: 1,
-            unit: '',
-            scheduleType: 'daily',
-            days: [0, 1, 2, 3, 4, 5, 6]
+      if (goalType === 'habit' && (!isEditing || actions.length === 0)) {
+        actions = [{
+          id: uid(),
+          name: title.trim(),
+          type: 'checkbox',
+          target: 1,
+          step: 1,
+          unit: '',
+          scheduleType: 'daily',
+          days: [0, 1, 2, 3, 4, 5, 6]
+        }];
+      }
+
+      let checkpoints = [];
+      if (goalType === 'milestone') {
+        const previous = goalToEdit?.checkpoints || [];
+        checkpoints = milestones
+          .map(m => m.trim())
+          .filter(Boolean)
+          .map(name => {
+            const existing = previous.find(c => c.name === name);
+            return existing ? existing : { id: uid(), name, done: false };
           });
-        } else if (goalType === 'milestone') {
-          milestones.filter(m => m.trim()).forEach(m => {
-            actions.push({
-              id: uid(),
-              name: m.trim(),
-              type: 'checkbox',
-              target: 1,
-              step: 1,
-              unit: '',
-              scheduleType: 'daily',
-              days: [0, 1, 2, 3, 4, 5, 6]
-            });
-          });
-        }
       }
 
       const constructedGoal = {
@@ -440,6 +562,7 @@ function GoalModal({ goalToEdit, categories, onSave, onClose }) {
         targetValue: target,
         currentValue: goalToEdit ? goalToEdit.currentValue : start,
         valueLog: goalToEdit ? goalToEdit.valueLog : [],
+        checkpoints,
         actions,
         history: goalToEdit ? goalToEdit.history : {},
         notes: goalToEdit ? goalToEdit.notes : {},
@@ -1382,8 +1505,12 @@ function GoalWorkspace({ goal, categories, onBack, onUpdateGoal, onDeleteGoal, o
           </>
         ) : (
           <div className="stat-pill smooth-transition" style={{ gridColumn: "span 3" }}>
-            <span className="label">Status</span>
-            <span className="value">{goal.completed ? "Achieved" : "Active"}</span>
+            <span className="label">{goal.goalType === 'milestone' ? "Checkpoints" : "Status"}</span>
+            <span className="value">
+              {goal.goalType === 'milestone'
+                ? `${getCheckpointProgress(goal).done} / ${getCheckpointProgress(goal).total} done`
+                : (goal.completed ? "Achieved" : "Active")}
+            </span>
           </div>
         )}
         <div className="stat-pill smooth-transition">
@@ -1392,7 +1519,11 @@ function GoalWorkspace({ goal, categories, onBack, onUpdateGoal, onDeleteGoal, o
         </div>
       </div>
 
-            <div className="action-section">
+      {goal.goalType === 'milestone' && (
+        <CheckpointList goal={goal} onUpdateGoal={onUpdateGoal} />
+      )}
+
+      <div className="action-section">
         <div className="section-title">
           <span>Habits & Routines</span>
           <SymbolButton symbol="+" label="Add Routine" onClick={() => { setEditingAction(null); setActionModalOpen(true); }} />
@@ -1701,7 +1832,7 @@ function GoalWorkspace({ goal, categories, onBack, onUpdateGoal, onDeleteGoal, o
         })()}
       </div>
 
-           {goal.targetValue !== undefined && goal.targetValue !== null && goal.targetValue !== "" && !Number.isNaN(Number(goal.targetValue)) && (
+      {goal.targetValue !== undefined && goal.targetValue !== null && goal.targetValue !== "" && !Number.isNaN(Number(goal.targetValue)) && (
         <div className="action-section">
           <div className="section-title">
             <span>Progress Updates</span>
@@ -1815,7 +1946,7 @@ function RoutioApp() {
         if (res && res.value) {
           try {
             const parsed = JSON.parse(res.value);
-            setGoals(Array.isArray(parsed) ? parsed : []);
+            setGoals(Array.isArray(parsed) ? parsed.map(normalizeGoal) : []);
           } catch (parseError) {
             console.error("Corrupted local storage payload detected:", parseError);
             alert("Warning: Local goal data appears corrupted. Initializing fresh workspace state.");
@@ -2009,7 +2140,7 @@ function RoutioApp() {
 
         if (isValid) {
           if (!window.confirm("Restoring a backup will replace all your current goals. Continue?")) return;
-          const sanitized = parsedGoals.map(g => ({
+          const sanitized = parsedGoals.map(g => normalizeGoal({
             ...g,
             category: g.category || "Growth",
             actions: Array.isArray(g.actions) ? g.actions : [],
